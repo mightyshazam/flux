@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 )
 
@@ -136,7 +137,7 @@ func ImageCredsWithDefaults(lookup func() ImageCreds, configPath string) (func()
 // ---
 
 // credsFor yields an authenticator for a specific host.
-func (cs Credentials) credsFor(host string) creds {
+func (cs Credentials) credsFor(host string, logger log.Logger) creds {
 	if cred, found := cs.m[host]; found {
 		return cred
 	}
@@ -147,7 +148,7 @@ func (cs Credentials) credsFor(host string) creds {
 	}
 
 	if hostIsAzureContainerRegistry(host) {
-		if cred, err := getAzureCloudConfigAADToken(host); err == nil {
+		if cred, err := getAzureCloudConfigAADToken(host, logger); err == nil {
 			return cred
 		}
 	}

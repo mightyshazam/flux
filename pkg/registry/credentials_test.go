@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -96,9 +97,9 @@ func TestRemoteFactory_ParseHost(t *testing.T) {
 			if v.error {
 				return
 			}
-			actualUser := creds.credsFor(v.imagePrefix).username
+			actualUser := creds.credsFor(v.imagePrefix, log.NewNopLogger()).username
 			assert.Equal(t, user, actualUser, "For test %q, expected %q but got %v", v.host, user, actualUser)
-			actualPass := creds.credsFor(v.imagePrefix).password
+			actualPass := creds.credsFor(v.imagePrefix, log.NewNopLogger()).password
 			assert.Equal(t, pass, actualPass, "For test %q, expected %q but got %v", v.host, user, actualPass)
 		})
 	}
@@ -111,8 +112,8 @@ func TestParseCreds_k8s(t *testing.T) {
 	assert.Equal(t, 1, len(c.Hosts()), "Invalid number of hosts")
 	host := c.Hosts()[0]
 	assert.Equal(t, "localhost:5000", host, "Host is incorrect")
-	assert.Equal(t, "testuser", c.credsFor(host).username, "User is incorrect")
-	assert.Equal(t, "testpassword", c.credsFor(host).password, "Password is incorrect")
+	assert.Equal(t, "testuser", c.credsFor(host, log.NewNopLogger()).username, "User is incorrect")
+	assert.Equal(t, "testpassword", c.credsFor(host, log.NewNopLogger()).password, "Password is incorrect")
 }
 
 func TestStringShouldNotLeakPasswords(t *testing.T) {
@@ -120,5 +121,5 @@ func TestStringShouldNotLeakPasswords(t *testing.T) {
 	c, err := ParseCredentials("test", k8sCreds)
 	assert.NoError(t, err)
 	assert.Equal(t, "{map[localhost:5000:<registry creds for testuser@localhost:5000, from test>]}", fmt.Sprintf("%v", c)) // In comparison standard String() method typically yields: "{map[localhost:5000:{testuser testpassword localhost:5000 test}]}".
-	assert.Equal(t, "testpassword", c.credsFor("localhost:5000").password, "Password is incorrect")                        // Actual password is left untouched.
+	assert.Equal(t, "testpassword", c.credsFor("localhost:5000", log.NewNopLogger()).password, "Password is incorrect")    // Actual password is left untouched.
 }

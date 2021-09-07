@@ -141,7 +141,7 @@ insecureCheckLoop:
 		return nil, err
 	}
 
-	cred := creds.credsFor(repo.Domain)
+	cred := creds.credsFor(repo.Domain, f.Logger)
 	if f.Trace {
 		f.Logger.Log("repo", repo.String(), "auth", cred.String(), "api", registryURL.String())
 	}

@@ -23,7 +23,7 @@ import (
 
 const (
 	// For recognising ECR hosts
-	awsPartitionSuffix = ".amazonaws.com"
+	awsPartitionSuffix   = ".amazonaws.com"
 	awsCnPartitionSuffix = ".amazonaws.com.cn"
 
 	// How long AWS tokens remain valid, according to AWS docs; this
@@ -33,7 +33,7 @@ const (
 	// how long to skip refreshing a region after we've failed
 	embargoDuration = 10 * time.Minute
 
-	EKS_SYSTEM_ACCOUNT = "602401143452"
+	EKS_SYSTEM_ACCOUNT    = "602401143452"
 	EKS_SYSTEM_ACCOUNT_CN = "918309763551"
 )
 
@@ -193,7 +193,7 @@ func ImageCredsWithAWSAuth(lookup func() ImageCreds, logger log.Logger, config A
 		// if we don't have the entry at all, we need to get a
 		// token. NB we can't check the inverse and return early,
 		// since if the creds do exist, we need to check their expiry.
-		if c := awsCreds.credsFor(domain); c == (creds{}) {
+		if c := awsCreds.credsFor(domain, logger); c == (creds{}) {
 			goto refresh
 		}
 

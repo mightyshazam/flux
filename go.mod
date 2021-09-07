@@ -29,6 +29,11 @@ replace (
 replace github.com/fluxcd/flux/pkg/install => ./pkg/install
 
 require (
+	github.com/Azure/azure-sdk-for-go v38.0.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.9.3
+	github.com/Azure/go-autorest/autorest/adal v0.8.1
+	github.com/Azure/go-autorest/autorest/azure/auth v0.1.0
+	github.com/Azure/go-autorest/autorest/azure/cli v0.1.0
 	github.com/Jeffail/gabs v1.4.0
 	github.com/Masterminds/semver/v3 v3.0.3
 	github.com/aws/aws-sdk-go v1.27.1

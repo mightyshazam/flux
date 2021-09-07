@@ -71,12 +71,13 @@ const (
 	defaultGitSkipMessage = "\n\n[ci skip]"
 
 	RequireECR = "ecr"
+	RequireACR = "acr"
 
 	k8sInClusterSecretsBaseDir = "/var/run/secrets/kubernetes.io"
 )
 
 var (
-	RequireValues = []string{RequireECR}
+	RequireValues = []string{RequireECR, RequireACR}
 )
 
 func optionalVar(fs *pflag.FlagSet, value ssh.OptionalValue, name, usage string) ssh.OptionalValue {
@@ -559,7 +560,14 @@ func main() {
 			}
 		}
 		imageCreds = credsWithAWSAuth
-
+		azurePreflight, credsWithAzureAuth := registry.ImageCredsWithAzureAuth(imageCreds, log.With(logger, "component", "azure"))
+		if mandatoryRegistry.has(RequireACR) {
+			if err := azurePreflight(); err != nil {
+				logger.Log("error", "Azure API required (due to --registry-require=acr) but not availabl", "err", err)
+				os.Exit(1)
+			}
+		}
+		imageCreds = credsWithAzureAuth
 		if *dockerConfig != "" {
 			credsWithDefaults, err := registry.ImageCredsWithDefaults(imageCreds, *dockerConfig)
 			if err != nil {

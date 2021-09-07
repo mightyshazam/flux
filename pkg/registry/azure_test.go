@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"github.com/go-kit/kit/log"
 	"testing"
 )
 
@@ -52,5 +53,19 @@ func Test_HostIsAzureContainerRegistry(t *testing.T) {
 		if result != v.isACR {
 			t.Fatalf("For test %q, expected isACR = %v but got %v", v.host, v.isACR, result)
 		}
+	}
+}
+
+func Test_CredentialExchange(t *testing.T) {
+	r, err := getCliCredentials(azureCloudConfig{
+		TenantId: "beb0e246-eb11-4bec-b5cf-1740fa5bd053",
+	}, "wiretap.azurecr.io", log.NewNopLogger())
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("%s", r.password)
+	t.Errorf("%s", r.password)
+	if r.username != "00000000-0000-0000-0000-000000000000" {
+		t.Fail()
 	}
 }
