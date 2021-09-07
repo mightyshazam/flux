@@ -22,7 +22,7 @@ Kubernetes >= v1.11
 ## Installation
 
 We put together a simple [Get Started
-tutorial](https://docs.fluxcd.io/en/stable/tutorials/get-started-helm) which takes about 5-10 minutes to follow.
+tutorial](https://fluxcd.io/legacy/flux/tutorials/get-started-helm/) which takes about 5-10 minutes to follow.
 You will have a fully working Flux installation deploying workloads to your cluster.
 
 ## Installing Flux using Helm
@@ -45,6 +45,41 @@ helm repo add fluxcd https://charts.fluxcd.io
    kubectl create namespace flux
    ```
 
+1. **Optional** Create and store a deploy key in a Kubernetes secret:
+
+   At startup Flux generates a SSH key pair and stores the private key in a Kubernetes secret.
+   Flux will log the public key at startup and you will then need to add the public key as a
+   deploy key on your GitHub repository (see below).  However, this can be onerous if you're
+   deploying Flux to multiple clusters from the same repository or installing Flux multiple
+   times.
+
+   If you wish to supply your own deploy key instead, you'll need to create the Kubernetes
+   secret yourself.  You can then set the name and data key of your secret when you start Flux
+   using Helm in the next step.
+
+   > **Note:** Don't check these key files into your Git repository!
+
+   ```sh
+   # 1. Generate a SSH key named identity:
+   ssh-keygen -q -N "" -f ./identity
+
+   # 2. Create a Kubernetes secret:
+   kubectl -n flux create secret generic flux-ssh --from-file=./identity
+
+   #   2a. The SSH key will be stored in a data key matching the file name.
+   #       Set the `git.secretDataKey` value to change the data key if
+   #       you want to use a different source file.
+
+   # 3. Don't check this key into your Git repository!
+   #    To delete the private key after you've created the secret above:
+   rm ./identity
+
+   # 4. Add the contents of ./identity.pub as a deployment key with write access in your
+   #    Git repo
+
+   # 5. Set the git.secretName and git.secretDataKey fields when you call Helm below!
+   ```
+
 1. Replace `fluxcd/flux-get-started` with your own git repository and run helm install:
 
    ```sh
@@ -53,13 +88,25 @@ helm repo add fluxcd https://charts.fluxcd.io
    --namespace flux
    ```
 
+   > **Note:** if you've defined your own deploy key secret you must set the secret name and
+   (optionally) data key as Helm values.
+
+   ```sh
+   helm upgrade -i flux fluxcd/flux \
+   --set git.url=git@github.com:fluxcd/flux-get-started \
+   --set git.secretName=flux-ssh \
+   --set git.secretDataKey=deploy-key \
+   --namespace flux
+   ```
+
 1. Setup Git deploy
 
-   > **Note:** this not required when [using git over HTTPS](#flux-with-git-over-https).
+   > **Note:** this not required if you created your own deploy key or if you're
+   [using git over HTTPS](#flux-with-git-over-https) as described below.
 
-   At startup Flux generates a SSH key and logs the public key. Find the
-   SSH public key by installing [fluxctl](https://docs.fluxcd.io/en/stable/references/fluxctl)
-   and running:
+   If you haven't supplied your own deploy key, Flux generates an SSH key and logs the public
+   key at startup.  You can obtain the SSH public key by installing
+   [fluxctl](https://fluxcd.io/legacy/flux/references/fluxctl/) and running:
 
    ```sh
    fluxctl identity --k8s-fwd-ns flux
@@ -198,15 +245,18 @@ The following tables lists the configurable parameters of the Flux chart and the
 | `dnsConfig`                                       | ``                                                   | Pod DNS config
 | `token`                                           | `None`                                               | Weave Cloud service token
 | `extraEnvs`                                       | `[]`                                                 | Extra environment variables for the Flux pod(s)
+| `extraEnvsFrom`                                   | `[]`                                                 | Extra environment variables from a list of sources for the Flux pod(s)
 | `env.secretName`                                  | ``                                                   | Name of the secret that contains environment variables which should be defined in the Flux container (using `envFrom`)
 | `rbac.create`                                     | `true`                                               | If `true`, create and use RBAC resources
 | `rbac.pspEnabled`                                 | `false`                                              | If `true`, create and use a restricted pod security policy for Flux pod(s)
 | `allowedNamespaces`                               | `[]`                                                 | Allow flux to manage resources in the specified namespaces. The namespace flux is deployed in will always be included
+| `defaultNamespace`                                | `""`                                                 | The namespace flux should use for resources where a namespace is not specified. If none is provided here, the default namespace in kubeconfig is used
 | `serviceAccount.create`                           | `true`                                               | If `true`, create a new service account
 | `serviceAccount.name`                             | `flux`                                               | Service account to be used
 | `serviceAccount.annotations`                      | ``                                                   | Additional Service Account annotations
 | `clusterRole.create`                              | `true`                                               | If `false`, Flux will be restricted to the namespaces given in `allowedNamespaces` and the namespace where it is deployed
 | `service.type`                                    | `ClusterIP`                                          | Service type to be used (exposing the Flux API outside of the cluster is not advised)
+| `service.createClusterIP`                                    | `true`                                          | If `false` and service type is `ClusterIP` the service will still be created, but without IP address (a.k.a. headless service).
 | `service.port`                                    | `3030`                                               | Service port to be used
 | `sync.state`                                      | `git`                                                | Where to keep sync state; either a tag in the upstream repo (`git`), or as an annotation on the SSH secret (`secret`)
 | `sync.timeout`                                    | `None`                                               | Duration after which sync operations time out (defaults to `1m`)
@@ -225,6 +275,7 @@ The following tables lists the configurable parameters of the Flux chart and the
 | `git.pollInterval`                                | `5m`                                                 | Period at which to poll git repo for new commits
 | `git.timeout`                                     | `20s`                                                | Duration after which git operations time out
 | `git.secretName`                                  | `None`                                               | Kubernetes secret with the SSH private key. Superseded by `helmOperator.git.secretName` if set.
+| `git.secretDataKey`                               | `identity`                                           | The data key in the Kubernetes secret with the SSH private key. Superseded by `helmOperator.git.secretDataKey` if set.  Flux will read the SSH private key from this data key in the Kubernetes secret optionally set by the `git.secretName` value above.
 | `git.secret.enabled`                              | `false`                                              | If set and a `.gitsecret` directory exist in the root of the git repository, Flux will execute a `git secret reveal -f` in the working clone before performing any operations
 | `git.config.enabled`                              | `false`                                              | Mount `$HOME/.gitconfig` via Secret into the Flux and HelmOperator Pods, allowing for custom global Git configuration
 | `git.config.secretName`                           | `Computed`                                           | Kubernetes secret with the global Git configuration
@@ -267,6 +318,7 @@ The following tables lists the configurable parameters of the Flux chart and the
 | `memcached.nodeSelector`                          | `{}`                                                 | Node Selector properties for the memcached deployment
 | `memcached.tolerations`                           | `[]`                                                 | Tolerations properties for the memcached deployment
 | `memcached.priorityClassName`                     | `""`                                                 | The name of the priority class to assign to the memcached pod.
+| `kube.externalConfig`                             | `false`                                              | If enabled, no kubeconfig and env var pointing to the kubeconfig will be created. You need to provide both on your own.
 | `kube.config`                                     | [See values.yaml][kubeconfig-ref]                    | Override for kubectl default config in the Flux pod(s).
 | `priorityClassName`                               | `""`                                                 | Set priority class for Flux
 | `prometheus.enabled`                              | `false`                                              | If enabled, adds prometheus annotations to Flux and helmOperator pod(s)
@@ -274,10 +326,13 @@ The following tables lists the configurable parameters of the Flux chart and the
 | `prometheus.serviceMonitor.interval`              | ``                                                   | Interval at which metrics should be scraped
 | `prometheus.serviceMonitor.namespace`             | ``                                                   | The namespace where the ServiceMonitor is deployed
 | `prometheus.serviceMonitor.additionalLabels`      | `{}`                                                 | Additional labels to add to the ServiceMonitor
-| `syncGarbageCollection.enabled`                   | `false`                                              | If enabled, fluxd will delete resources that it created, but are no longer present in git (see [garbage collection](../../docs/references/garbagecollection.md))
-| `syncGarbageCollection.dry`                       | `false`                                              | If enabled, fluxd won't delete any resources, but log the garbage collection output (see [garbage collection](../../docs/references/garbagecollection.md))
+| `syncGarbageCollection.enabled`                   | `false`                                              | If enabled, fluxd will delete resources that it created, but are no longer present in git (see [garbage collection](https://fluxcd.io/legacy/flux/references/garbagecollection/))
+| `syncGarbageCollection.dry`                       | `false`                                              | If enabled, fluxd won't delete any resources, but log the garbage collection output (see [garbage collection](https://fluxcd.io/legacy/flux/references/garbagecollection/))
 | `manifestGeneration`                              | `false`                                              | If enabled, fluxd will look for `.flux.yaml` and run Kustomize or other manifest generators
 | `hostAliases`                                     | `{}`                                                 | Additional hostAliases to add to the Flux pod(s). See <https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/>
+| `dashboards.enabled`                              | `false`                                              | If enabled, flux will create a configmap with a dashboard in json that's going to be picked up by grafana (see [sidecar.dashboards.enabled](https://github.com/helm/charts/tree/master/stable/grafana#configuration)). Also remember to set `prometheus.enabled=true` to expose the metrics.
+| `dashboards.namespace`                            | ``                                                   | The namespace where the dashboard is deployed, defaults to the installation namespace
+| `dashboards.nameprefix`                           | `flux-dashboards`                                    | The prefix of the generated configmaps
 
 [memcached-ref]: https://github.com/fluxcd/flux/blob/master/chart/flux/values.yaml#L201-L204
 [kubeconfig-ref]: https://github.com/fluxcd/flux/blob/master/chart/flux/values.yaml#L232-L244

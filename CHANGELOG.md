@@ -1,3 +1,544 @@
+> Note on the future of Flux and Helm Operator: We are working on a
+> next generation Flux assembled from components as part of a bigger
+> [GitOps Toolkit](https://toolkit.fluxcd.io/) project. The roadmap
+> for the GitOps Toolkit can be found
+> [here](https://toolkit.fluxcd.io/roadmap/).
+>
+> We are eager to hear [feedback, suggestions, and/or feature
+> requests](https://github.com/fluxcd/toolkit/discussions) for Flux v2
+> and Toolkit components.
+
+## 1.24.0 (2021-08-20)
+
+This minor release addresses some error cases that may be encountered when an
+AWS ECR repo is used together with Image Update Automation, but the AWS API for
+Instance Metadata is unavailable, or when it has been purposefully blocked.
+
+This release also includes an update to the release version of Memcached, which
+is a patch release.
+
+With this release, @kingdonb is officially recognized as a maintainer of Flux.
+🎈🎉🎂🎊🎈
+
+### Fixes
+
+- Skip AWS Metadata API pre-flight check when regions are passed via config [fluxcd/flux#3485][]
+- Reset sync errors on successful sync [fluxcd/flux#3156][]
+
+### Maintenance and documentation
+
+- Update kubernetes go client (@ 0.21.3), update Golang to 1.16.7, other go mod updates [fluxcd/flux#3538][]
+- Bump go.mozilla.org/sops/v3 from 3.6.1 to 3.7.1 [fluxcd/flux#3514][]
+- Upgrade base image to alpine-3.14.1 [fluxcd/flux#3532][]
+- Update CI pipelines to test on Kubernetes 1.22.0 [fluxcd/flux#3530][]
+- Add GitHub issue template [fluxcd/flux#3527][]
+- Update links to calendar and resources [fluxcd/flux#3534][]
+- Update youtube playlist [fluxcd/flux#3531][]
+
+### Thanks
+
+Thanks to @squaremo, @stefanprodan, @dependabot[bot], @dholbach, @pbn4, @pierluigilenoci, @evq, @kingdonb, @osela and @schizoid90 for their contributions to this release.
+
+[fluxcd/flux#3538]: https://github.com/fluxcd/flux/pull/3538
+[fluxcd/flux#3534]: https://github.com/fluxcd/flux/pull/3534
+[fluxcd/flux#3532]: https://github.com/fluxcd/flux/pull/3532
+[fluxcd/flux#3531]: https://github.com/fluxcd/flux/pull/3531
+[fluxcd/flux#3530]: https://github.com/fluxcd/flux/pull/3530
+[fluxcd/flux#3527]: https://github.com/fluxcd/flux/pull/3527
+[fluxcd/flux#3514]: https://github.com/fluxcd/flux/pull/3514
+[fluxcd/flux#3485]: https://github.com/fluxcd/flux/pull/3485
+[fluxcd/flux#3156]: https://github.com/fluxcd/flux/pull/3156
+
+## 1.23.2 (2021-08-04)
+
+Post-publish note: this patch release did not correctly merge and include the
+fix for the issue that it was advertised to address at release time.
+
+This release image only rolled the packages from Alpine upstream and contained
+no code changes. The fix for [#3485][fluxcd/flux#3485] will be included in the
+following release, see [Flux Daemon 1.24.0](https://github.com/fluxcd/flux/releases/tag/1.24.0).
+
+~This patch release addresses some error cases that may be encountered when an
+AWS ECR repo is used together with Image Update Automation, but the AWS API for
+Instance Metadata is unavailable, or when it has been purposefully blocked.~
+
+### Fixes
+
+- ~Skip AWS Metadata API pre-flight check when regions are passed via config [fluxcd/flux#3485][]~
+
+### Thanks
+
+Thanks to @hiddeco, @evq, @squaremo, @pbn4, @admssa, @renanqts, @jclynny, @sureshamk, @jayvie, and @gonzalobarbitta for their contributions to this release.
+
+## 1.23.1 (2021-07-23)
+
+This release reverts a breaking change reported in [fluxcd/flux#3500][], caused
+from an upgrade to Kustomize v3.8.10.
+
+Flux v1 will remain at Kustomize v3.8.7 until maintenance is ended, since any
+further upgrades of Kustomize all appear to contain breaking changes.
+
+### Fixes
+
+- Roll back Kustomize to v3.8.7 [fluxcd/flux#3504][]
+- Update SOPS to v3.6.1 [fluxcd/flux#3508][]
+- fix e2e tests - use the latest kind version (v0.11.1) [fluxcd/flux#3507][]
+
+### Thanks
+
+Thanks to @bquantump, @mmcaya, @aleclerc-sonrai, @hiddeco, @ahached, @squaremo, @hiddeco, and @kingdonb for their contributions to this release.
+
+[fluxcd/flux#3500]: https://github.com/fluxcd/flux/issues/3500
+[fluxcd/flux#3508]: https://github.com/fluxcd/flux/pull/3508
+[fluxcd/flux#3507]: https://github.com/fluxcd/flux/pull/3507
+[fluxcd/flux#3504]: https://github.com/fluxcd/flux/pull/3504
+
+## 1.23.0 (2021-06-25)
+
+This release migrates Flux's discovery cache and helm chart to API versions
+that are compatible with the upcoming Kubernetes 1.22.0 release and tested
+against Kubernetes 1.22.0-alpha.3, where all v1beta1 versions from the
+`rbac.authorization.k8s.io`, and `apiextensions.k8s.io` API groups are
+deprecated, in favor of their GA v1 counterparts.
+
+**Note: Kubernetes Upgrade Required**
+
+These APIs have been available in Kubernetes releases (respectively) from 1.8,
+and 1.16. Users will need to upgrade to at least Kubernetes 1.16. This release
+has been available since September 2019, and was already EOL in August 2020.
+Flux Users should be on at least this version by now.
+
+This will enable Flux v1 to continue to work on upcoming versions of Kubernetes that have yet to be released.
+
+### Maintenance and documentation
+
+- Remove docs, point to new locations [fluxcd/flux#3491][]
+- Move list of production users [fluxcd/flux#3481][]
+- Update the discovery cache to apiextensions v1 [fluxcd/flux#3439][]
+
+### Thanks
+
+Thanks to @stefanprodan, @dholbach, @hiddeco, and @kingdonb, for their contributions to this release.
+
+[fluxcd/flux#3491]: https://github.com/fluxcd/flux/pull/3491
+[fluxcd/flux#3481]: https://github.com/fluxcd/flux/pull/3481
+[fluxcd/flux#3439]: https://github.com/fluxcd/flux/pull/3439
+
+## 1.22.2 (2021-04-23)
+
+This release bundles migration-related documentation updates with some minor fixes, and tracks Kustomize to the end of its v3.8 minor release series. The next release will probably include an update to Kustomize v3.10.
+
+### Fixes
+
+- Set sync-timeout for kustomize build [fluxcd/flux#3381][]
+- Fix recursive calls in mock [fluxcd/flux#3250][]
+- Update kustomize to v3.8.10 [fluxcd/flux#3471][]
+
+### Maintenance and documentation
+
+- Why should I migrate to Flux v2? [fluxcd/flux#3467][]
+- Add production users to list [fluxcd/flux#3465][], [fluxcd/flux#3461][]
+
+### Thanks
+
+Thanks to @stefanprodan, @bvwells, @jumpeiMano, @kingdonb, @maniankara and @nokome for their contributions to this release.
+
+[fluxcd/flux#3471]: https://github.com/fluxcd/flux/pull/3471
+[fluxcd/flux#3467]: https://github.com/fluxcd/flux/pull/3467
+[fluxcd/flux#3465]: https://github.com/fluxcd/flux/pull/3465
+[fluxcd/flux#3461]: https://github.com/fluxcd/flux/pull/3461
+[fluxcd/flux#3381]: https://github.com/fluxcd/flux/pull/3381
+[fluxcd/flux#3250]: https://github.com/fluxcd/flux/pull/3250
+
+## 1.22.1 (2021-03-31)
+
+This release rolls the upstream alpine base image, mitigating a CVE warning.
+
+### Fixes
+
+- Addresses CVE in gnutls@3.6.15-r0 [fluxcd/flux#3453][]
+
+### Thanks
+
+Thanks to @stefanprodan, @bleech1, and @kingdonb for their contributions to this release.
+
+[fluxcd/flux#3453]: https://github.com/fluxcd/flux/issues/3453
+
+## 1.22.0 (2021-03-17)
+
+This release continues the support of Flux v1 in maintenance mode.
+
+This minor release of Flux v1 adds support for `envsubst`, lining up with the [Post-Build Variable Substitution](https://toolkit.fluxcd.io/components/kustomize/kustomization/#variable-substitution) feature which was added in Flux v2 to help replicate some functionality that was lost when `.flux.yaml` was deprecated in Flux v2.
+
+Some other minor enhancements that are non breaking changes have also been highlighted below.
+
+All users are encouraged to begin finding a migration path to Flux v2, and filing issues when their migrations are blocked. While the length of time that maintenance mode will continue providing fixes and support for Flux v1 has not been formally determined yet, we can safely say that the horizon is still at least 6 months away.
+
+### Enhancements
+
+- Add envsubst package to docker image [fluxcd/flux#3407][]
+- whitelist two environment variables for AWS IAM roles in Kubernetes - [fluxcd/flux#3229][]
+- Store public key in k8s secret [fluxcd/flux#3411][]
+- Add new metric to check if the repository is down or misconfigured [fluxcd/flux#3302][]
+
+### Fixes
+
+- Add parsing of Docker sha256 fixations - [fluxcd/flux#3440][]
+- Align antecedent annotation in flux and helm-operator rebased [fluxcd/flux#3296][]
+- Rationalize usage messages [fluxcd/flux#3445][]
+
+### Maintenance and documentation
+
+- Remove the link-checker action [fluxcd/flux#3432][]
+- go mod update [fluxcd/flux#3436][]
+- Omnibus branch for Flux v1.22.0 Release [fluxcd/flux#3442][]
+  - (Merged #3436, #3229, #3440, #3411, #3296, #3445, #3407, #3302)
+- add twitter and linkedin to docs.f.i [fluxcd/flux#3429][]
+- Housekeeping: merge release branch 1.21.x into master [fluxcd/flux#3427][]
+
+### Thanks
+
+Thanks to @squaremo, @mattwillsher, @hermanbanken, @masterkain, @rust84, @fabstu, @derrickburns, @dlespiau, @alaa, @alex-shpak, @stevehipwell, @drazul, @stefanprodan, @hiddeco, @dholbach and @kingdonb for their contributions to this release.
+
+[fluxcd/flux#3296]: https://github.com/fluxcd/flux/pull/3296
+[fluxcd/flux#3436]: https://github.com/fluxcd/flux/pull/3436
+[fluxcd/flux#3229]: https://github.com/fluxcd/flux/pull/3229
+[fluxcd/flux#3440]: https://github.com/fluxcd/flux/pull/3440
+[fluxcd/flux#3411]: https://github.com/fluxcd/flux/pull/3411
+[fluxcd/flux#3445]: https://github.com/fluxcd/flux/pull/3445
+[fluxcd/flux#3407]: https://github.com/fluxcd/flux/pull/3407
+[fluxcd/flux#3302]: https://github.com/fluxcd/flux/pull/3302
+[fluxcd/flux#3442]: https://github.com/fluxcd/flux/pull/3442
+[fluxcd/flux#3432]: https://github.com/fluxcd/flux/pull/3432
+[fluxcd/flux#3429]: https://github.com/fluxcd/flux/pull/3429
+[fluxcd/flux#3427]: https://github.com/fluxcd/flux/pull/3427
+
+## 1.21.2 (2021-02-16)
+
+This patch release surfaces a notice from https://docs.fluxcd.io/en/latest/
+declaring that "Flux v1 is in maintenance mode" into the Flux v1 stable docs,
+as well as pointing users from as many places as possible to the new Flux v2.
+
+### Fixes
+
+- Update AWS SDK and SOPS [fluxcd/flux#3401][]
+- Set Rollout strategy type: Recreate (Fixes for chart 1.6.2)
+  [fluxcd/flux#3325][]
+
+### Maintenance and documentation
+
+- Point to Flux v2 from docs [fluxcd/flux#3419][], [fluxcd/flux#3423][]
+- Point to new community resources at [fluxcd.io](https://fluxcd.io)
+  [fluxcd/flux#3403][]
+- Update issue/PR templates to mention Flux v2 [fluxcd/flux#3415][],
+  [fluxcd/flux#3414][]
+- Add NetHunt to list of production users [fluxcd/flux#3399][]
+
+### Thanks
+
+Thanks to @nairb774, @ViBiOh, @SvitlanaTsupryk-jul18, @dholbach, @drewfreyling,
+@stefanprodan, @hiddeco, @kingdonb and @squaremo for their contributions to
+this release.
+
+[fluxcd/flux#3423]: https://github.com/fluxcd/flux/pull/3423
+[fluxcd/flux#3419]: https://github.com/fluxcd/flux/pull/3419
+[fluxcd/flux#3416]: https://github.com/fluxcd/flux/pull/3416
+[fluxcd/flux#3415]: https://github.com/fluxcd/flux/pull/3415
+[fluxcd/flux#3414]: https://github.com/fluxcd/flux/pull/3414
+[fluxcd/flux#3403]: https://github.com/fluxcd/flux/pull/3403
+[fluxcd/flux#3401]: https://github.com/fluxcd/flux/pull/3401
+[fluxcd/flux#3400]: https://github.com/fluxcd/flux/pull/3400
+[fluxcd/flux#3399]: https://github.com/fluxcd/flux/pull/3399
+[fluxcd/flux#3358]: https://github.com/fluxcd/flux/pull/3358
+[fluxcd/flux#3325]: https://github.com/fluxcd/flux/pull/3325
+
+## 1.21.1 (2021-01-06)
+
+### Fixes
+
+- Fix shell completion [fluxcd/flux#3355][]
+- Optional command timeout field in .flux.yaml [fluxcd/flux#3228][]
+
+### Maintenance and documentation
+
+- Add to list of production users [fluxcd/flux#3386][],
+  [fluxcd/flux#3247][], [fluxcd/flux#3360][], [fluxcd/flux#3290][],
+  [fluxcd/flux#3315][], [fluxcd/flux#3280][]
+- Let productions users table reflow better [fluxcd/flux#3376][]
+- Upgrade json-patch to v4.9.0 [fluxcd/flux#3373][]
+- snap: move to core20 [fluxcd/flux#3371][]
+- snap: update build to use go 1.15 [fluxcd/flux#3345][]
+- Update engineerd/setup-kind to v0.5.0 [fluxcd/flux#3364][]
+- Use fossa-contrib/fossa-action instead [fluxcd/flux#3331][]
+- Fixup configmap in Git GPG documentation [fluxcd/flux#3311][]
+- Add maintenance note to GitHub templates and README
+  [fluxcd/flux#3321][], [fluxcd/flux#3333][]
+- Move Fons to maintainer emeritus [fluxcd/flux#3319][]
+- Point to Flagger website [fluxcd/flux#3391][]
+- Specific documentation for HelmRelease Automation
+  [fluxcd/flux#3144][]
+
+### Thanks
+
+Thanks to @SimonyanG, @alanjcastonguay, @alisondy, @austinbv,
+@daniswoop, @demon, @dholbach, @douglasquintanilha, @gaffneyd4,
+@joaovitor, @kingdonb, @lalyos, @marshallford, @mcanaves, @mewzherder,
+@smorimoto, @squaremo and @stefansedich for their contributions to
+this release.
+
+[fluxcd/flux#3391]: https://github.com/fluxcd/flux/pull/3391
+[fluxcd/flux#3386]: https://github.com/fluxcd/flux/pull/3386
+[fluxcd/flux#3376]: https://github.com/fluxcd/flux/pull/3376
+[fluxcd/flux#3373]: https://github.com/fluxcd/flux/pull/3373
+[fluxcd/flux#3371]: https://github.com/fluxcd/flux/pull/3371
+[fluxcd/flux#3364]: https://github.com/fluxcd/flux/pull/3364
+[fluxcd/flux#3360]: https://github.com/fluxcd/flux/pull/3360
+[fluxcd/flux#3355]: https://github.com/fluxcd/flux/pull/3355
+[fluxcd/flux#3345]: https://github.com/fluxcd/flux/pull/3345
+[fluxcd/flux#3333]: https://github.com/fluxcd/flux/pull/3333
+[fluxcd/flux#3331]: https://github.com/fluxcd/flux/pull/3331
+[fluxcd/flux#3321]: https://github.com/fluxcd/flux/pull/3321
+[fluxcd/flux#3319]: https://github.com/fluxcd/flux/pull/3319
+[fluxcd/flux#3315]: https://github.com/fluxcd/flux/pull/3315
+[fluxcd/flux#3311]: https://github.com/fluxcd/flux/pull/3311
+[fluxcd/flux#3290]: https://github.com/fluxcd/flux/pull/3290
+[fluxcd/flux#3280]: https://github.com/fluxcd/flux/pull/3280
+[fluxcd/flux#3247]: https://github.com/fluxcd/flux/pull/3247
+[fluxcd/flux#3228]: https://github.com/fluxcd/flux/pull/3228
+[fluxcd/flux#3144]: https://github.com/fluxcd/flux/pull/3144
+
+## 1.21.0 (2020-10-01)
+
+This minor version release updates the versions of `kubectl` and
+`kustomize`.
+
+> **NB**: the updated version of Kustomize includes a _breaking
+> change_ (despite being a patch release), in which [prefix
+> transformers no longer apply to
+> namespaces](https://github.com/kubernetes-sigs/kustomize/issues/235).
+
+### Fixes
+
+- Update go, kubectl and kustomize [fluxcd/flux#3309][]
+
+### Maintenance and documentation
+
+- Correct FAQ typo: fluxcd.io/ignore value must be string [fluxcd/flux#3303][]
+- Clarify misleading FAQ entry. [fluxcd/flux#3281][]
+- Update Fluxcloud URL [fluxcd/flux#3307][]
+- Add production users to list [fluxcd/flux#3249][],
+  [fluxcd/flux#3300][], [fluxcd/flux#3274][]
+- FOSSA scan enabled [fluxcd/flux#3294][]
+- Exclude chart releases from Snap [fluxcd/flux#3266][]
+
+### Thanks
+
+Thanks to @Frederik-Baetens, @austinpray, @bricef, @dewe, @dholbach,
+@idvoretskyi, @lloydchang, @lucioveloso and @stefanprodan for their
+contributions to this release.
+
+[fluxcd/flux#3309]: https://github.com/fluxcd/flux/pull/3309
+[fluxcd/flux#3307]: https://github.com/fluxcd/flux/pull/3307
+[fluxcd/flux#3303]: https://github.com/fluxcd/flux/pull/3303
+[fluxcd/flux#3300]: https://github.com/fluxcd/flux/pull/3300
+[fluxcd/flux#3294]: https://github.com/fluxcd/flux/pull/3294
+[fluxcd/flux#3281]: https://github.com/fluxcd/flux/pull/3281
+[fluxcd/flux#3274]: https://github.com/fluxcd/flux/pull/3274
+[fluxcd/flux#3266]: https://github.com/fluxcd/flux/pull/3266
+[fluxcd/flux#3263]: https://github.com/fluxcd/flux/pull/3263
+[fluxcd/flux#3249]: https://github.com/fluxcd/flux/pull/3249
+
+## 1.20.2 (2020-08-19)
+
+This patch release includes a bump to kubectl, which may help users
+experiencing sync timeouts with CRDs.
+
+### Fixes
+
+- retain the error when appending the stderr output
+  [fluxcd/flux#3219][]
+- Fix some typos [fluxcd/flux#3257][]
+- Update SOPS to v3.6.0 and filter files before decryption [fluxcd/flux#3248][]
+- Update kubectl to v1.17.11 [fluxcd/flux#3246][]
+- Bump Go to 1.14.7 to fix CVE-2020-14040 [fluxcd/flux#3235][]
+
+### Documentation
+
+- fluxctl snap requires the --classic option [fluxcd/flux#3238][]
+- Add Enliven Systems (#3182) and Duedil (#3194) [fluxcd/flux#3234][]
+
+### Thanks
+
+Thanks to @dholbach, @dvulpe, @idvoretskyi, @jjmengze, @nebril,
+@squaremo and @stefanprodan for their contributions to this release.
+
+[fluxcd/flux#3257]: https://github.com/fluxcd/flux/pull/3257
+[fluxcd/flux#3248]: https://github.com/fluxcd/flux/pull/3248
+[fluxcd/flux#3246]: https://github.com/fluxcd/flux/pull/3246
+[fluxcd/flux#3238]: https://github.com/fluxcd/flux/pull/3238
+[fluxcd/flux#3235]: https://github.com/fluxcd/flux/pull/3235
+[fluxcd/flux#3234]: https://github.com/fluxcd/flux/pull/3234
+[fluxcd/flux#3231]: https://github.com/fluxcd/flux/pull/3231
+[fluxcd/flux#3219]: https://github.com/fluxcd/flux/pull/3219
+
+
+## 1.20.1 (2020-08-05)
+
+This patch release has some fixes for faults in improvements in
+1.20.0.
+
+### Fixes
+
+- Do not return error when failed to load last-synced resources
+  [fluxcd/flux#3223][]
+- Dockerfile: Include /sbin dir in PATH [fluxcd/flux#3211][]
+- Put notice re gitops-engine at top of README [fluxcd/flux#3197][]
+- Avoid panic when directory does not exist [fluxcd/flux#3193][]
+- Put git messages into tmp files [fluxcd/flux#3179][]
+
+### Maintenance and documentation
+
+- Give advice on percent-encoding creds using in URL [fluxcd/flux#3204][]
+- Get shellcheck from new URL [fluxcd/flux#3224][]
+- Add Sngular as Flux user [fluxcd/flux#3212][]
+- Add rebase GitHub action [fluxcd/flux#3190][]
+
+### Thanks
+
+Thanks to @alex-shpak, @mmorejon, @ordovicia, @ricardo-larosa,
+@squaremo and @stefanprodan for their contributions to this release.
+
+[fluxcd/flux#3224]: https://github.com/fluxcd/flux/pull/3224
+[fluxcd/flux#3223]: https://github.com/fluxcd/flux/pull/3223
+[fluxcd/flux#3212]: https://github.com/fluxcd/flux/pull/3212
+[fluxcd/flux#3211]: https://github.com/fluxcd/flux/pull/3211
+[fluxcd/flux#3204]: https://github.com/fluxcd/flux/pull/3204
+[fluxcd/flux#3197]: https://github.com/fluxcd/flux/pull/3197
+[fluxcd/flux#3193]: https://github.com/fluxcd/flux/pull/3193
+[fluxcd/flux#3190]: https://github.com/fluxcd/flux/pull/3190
+[fluxcd/flux#3179]: https://github.com/fluxcd/flux/pull/3179
+[fluxcd/flux#3178]: https://github.com/fluxcd/flux/pull/3178
+
+## 1.20.0 (2020-07-08)
+
+This minor version release updates dependencies, and includes some
+quality of life improvements, such as having a cooldown for rate
+limiting.
+
+### Fixes
+
+- Whitelist three env vars for Git cmd executions [fluxcd/flux#3016][]
+- git: retry repo clone on status unreachable [fluxcd/flux#3013][]
+- Get ChangeSet from outside of paths if manifest generation is enabled [fluxcd/flux#3022][]
+- Direct comparison of last-synced and newly-synced resources [fluxcd/flux#3039][]
+- Ignore some errors during manifest loading [fluxcd/flux#1559][]
+- Fix missing return on ECR domain check [fluxcd/flux#3002][]
+- Take all resource versions into account during GC [fluxcd/flux#3008][]
+- Add AWS China region domain to recognized ECR hosts [fluxcd/flux#2982][]
+- Introduce cooldown period in rate limiter [fluxcd/flux#2986][]
+
+### Enhancements
+
+- Limit git commit message to first 10 images [fluxcd/flux#3140][]
+- Support completion for fish [fluxcd/flux#2997][]
+- Expand the GCP credentials support to GAR ( `*-docker.pkg.dev` ) [fluxcd/flux#3038][]
+
+### Maintenance and documentation
+
+- Fix typo in fluxyaml-config-files.md doc [fluxcd/flux#3001][]
+- build fluxctl snap using GH action [fluxcd/flux#3072][]
+- Correct parameter name in docs [fluxcd/flux#3079][]
+- Migrate chart publishing to GitHub Actions [fluxcd/flux#3085][]
+- ci: Run CVE scanning for latest release and master build [fluxcd/flux#3086][]
+- Fix use of 'lxd' and 'snapcraft' in GH action [fluxcd/flux#3153][]
+- Update location of kubeyaml image [fluxcd/flux#3087][]
+- Update alpine and git version [fluxcd/flux#3115][]
+- Update kubectl and kustomize [fluxcd/flux#3176][], [fluxcd/flux#2987][], [fluxcd/flux#3088][]
+- document previous meetings [fluxcd/flux#3006][]
+- README: Add more companies to production users [fluxcd/flux#3104][],
+  [fluxcd/flux#3071][], [fluxcd/flux#3070][], [fluxcd/flux#3092][],
+  [fluxcd/flux#3100][], [fluxcd/flux#3094][], [fluxcd/flux#3091][],
+  [fluxcd/flux#3155][], [fluxcd/flux#3149][], [fluxcd/flux#3139][],
+  [fluxcd/flux#3130][], [fluxcd/flux#2993][], [fluxcd/flux#2995][],
+  [fluxcd/flux#2974][], [fluxcd/flux#3067][]
+- Add social links to the footer [fluxcd/flux#3106][]
+- docs: (re-)add link to Helm Operator documentation [fluxcd/flux#3105][]
+- update theme/mkdocs, use note admonitions, fix identation [fluxcd/flux#3102][]
+- Fix markup in ordered lists + fenced code groups [fluxcd/flux#3084][]
+- docs: update helm operator integration glob patterns [fluxcd/flux#3060][]
+- Update docs for changing default namespace [fluxcd/flux#3047][]
+- Add guide to use GKE workload identity with private GCR registry [fluxcd/flux#3023][]
+- fix broken minikube link, only report broken links in GH action [fluxcd/flux#3000][]
+- build: move back to upstream gh action [fluxcd/flux#2977][]
+- Update get started docs [fluxcd/flux#2973][]
+- ci: more thorough link checking [fluxcd/flux#2956][]
+- Fix 404 pages in documentation [fluxcd/flux#3007][]
+
+### Thanks
+
+Thanks to @BitProcessor, @Frizlab, @GregoireW, @alex-shpak, @bboreham,
+@billyshambrook, @bpinter, @christiangda, @circa10a, @colinrymer,
+@cpressland, @dholbach, @edernucci, @faweis, @hiddeco, @jaydeland,
+@jpreese, @marratj, @michaelbeaumont, @nipponilyal, @ordovicia,
+@rndstr, @sayboras, @schnatterer, @squaremo, @stefanprodan,
+@stephenshaw-felfel, @tux-00, @victorsalaun and @vyckou for their
+contributions to this release.
+
+[fluxcd/flux#3176]: https://github.com/fluxcd/flux/pull/3176
+[fluxcd/flux#3175]: https://github.com/fluxcd/flux/pull/3175
+[fluxcd/flux#3155]: https://github.com/fluxcd/flux/pull/3155
+[fluxcd/flux#3153]: https://github.com/fluxcd/flux/pull/3153
+[fluxcd/flux#3149]: https://github.com/fluxcd/flux/pull/3149
+[fluxcd/flux#3140]: https://github.com/fluxcd/flux/pull/3140
+[fluxcd/flux#3139]: https://github.com/fluxcd/flux/pull/3139
+[fluxcd/flux#3130]: https://github.com/fluxcd/flux/pull/3130
+[fluxcd/flux#3115]: https://github.com/fluxcd/flux/pull/3115
+[fluxcd/flux#3106]: https://github.com/fluxcd/flux/pull/3106
+[fluxcd/flux#3105]: https://github.com/fluxcd/flux/pull/3105
+[fluxcd/flux#3104]: https://github.com/fluxcd/flux/pull/3104
+[fluxcd/flux#3102]: https://github.com/fluxcd/flux/pull/3102
+[fluxcd/flux#3100]: https://github.com/fluxcd/flux/pull/3100
+[fluxcd/flux#3094]: https://github.com/fluxcd/flux/pull/3094
+[fluxcd/flux#3092]: https://github.com/fluxcd/flux/pull/3092
+[fluxcd/flux#3091]: https://github.com/fluxcd/flux/pull/3091
+[fluxcd/flux#3088]: https://github.com/fluxcd/flux/pull/3088
+[fluxcd/flux#3087]: https://github.com/fluxcd/flux/pull/3087
+[fluxcd/flux#3086]: https://github.com/fluxcd/flux/pull/3086
+[fluxcd/flux#3085]: https://github.com/fluxcd/flux/pull/3085
+[fluxcd/flux#3084]: https://github.com/fluxcd/flux/pull/3084
+[fluxcd/flux#3079]: https://github.com/fluxcd/flux/pull/3079
+[fluxcd/flux#3072]: https://github.com/fluxcd/flux/pull/3072
+[fluxcd/flux#3071]: https://github.com/fluxcd/flux/pull/3071
+[fluxcd/flux#3070]: https://github.com/fluxcd/flux/pull/3070
+[fluxcd/flux#3067]: https://github.com/fluxcd/flux/pull/3067
+[fluxcd/flux#3060]: https://github.com/fluxcd/flux/pull/3060
+[fluxcd/flux#3047]: https://github.com/fluxcd/flux/pull/3047
+[fluxcd/flux#3039]: https://github.com/fluxcd/flux/pull/3039
+[fluxcd/flux#3038]: https://github.com/fluxcd/flux/pull/3038
+[fluxcd/flux#3023]: https://github.com/fluxcd/flux/pull/3023
+[fluxcd/flux#3022]: https://github.com/fluxcd/flux/pull/3022
+[fluxcd/flux#3016]: https://github.com/fluxcd/flux/pull/3016
+[fluxcd/flux#3013]: https://github.com/fluxcd/flux/pull/3013
+[fluxcd/flux#3008]: https://github.com/fluxcd/flux/pull/3008
+[fluxcd/flux#3007]: https://github.com/fluxcd/flux/pull/3007
+[fluxcd/flux#3006]: https://github.com/fluxcd/flux/pull/3006
+[fluxcd/flux#3002]: https://github.com/fluxcd/flux/pull/3002
+[fluxcd/flux#3001]: https://github.com/fluxcd/flux/pull/3001
+[fluxcd/flux#3000]: https://github.com/fluxcd/flux/pull/3000
+[fluxcd/flux#2997]: https://github.com/fluxcd/flux/pull/2997
+[fluxcd/flux#2995]: https://github.com/fluxcd/flux/pull/2995
+[fluxcd/flux#2993]: https://github.com/fluxcd/flux/pull/2993
+[fluxcd/flux#2987]: https://github.com/fluxcd/flux/pull/2987
+[fluxcd/flux#2986]: https://github.com/fluxcd/flux/pull/2986
+[fluxcd/flux#2982]: https://github.com/fluxcd/flux/pull/2982
+[fluxcd/flux#2977]: https://github.com/fluxcd/flux/pull/2977
+[fluxcd/flux#2974]: https://github.com/fluxcd/flux/pull/2974
+[fluxcd/flux#2973]: https://github.com/fluxcd/flux/pull/2973
+[fluxcd/flux#2971]: https://github.com/fluxcd/flux/pull/2971
+[fluxcd/flux#2969]: https://github.com/fluxcd/flux/pull/2969
+[fluxcd/flux#2956]: https://github.com/fluxcd/flux/pull/2956
+[fluxcd/flux#1559]: https://github.com/fluxcd/flux/pull/1559
+
 ## 1.19.0 (2020-04-02)
 
 This minor version release is a bumper edition with many

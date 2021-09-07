@@ -11,7 +11,7 @@ function install_tiller() {
   if ! helm version > /dev/null 2>&1; then # only if helm isn't already installed
     kubectl --namespace kube-system create sa tiller
     kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    helm init --service-account tiller --upgrade --wait
+    helm init --stable-repo-url https://charts.helm.sh/stable --service-account tiller --upgrade --wait
   fi
 }
 
@@ -21,7 +21,7 @@ function uninstall_tiller() {
   kubectl --namespace kube-system delete sa tiller
 }
 
-HELMRELEASE_CRD_URL=https://raw.githubusercontent.com/fluxcd/helm-operator/v1.0.0-rc4/deploy/flux-helm-release-crd.yaml
+HELMRELEASE_CRD_URL=https://raw.githubusercontent.com/fluxcd/helm-operator/v1.4.0/deploy/crds.yaml
 
 function install_flux_with_helm() {
 

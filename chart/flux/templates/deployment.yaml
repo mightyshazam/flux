@@ -14,6 +14,8 @@ spec:
     matchLabels:
       app: {{ template "flux.name" . }}
       release: {{ .Release.Name }}
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -44,9 +46,11 @@ spec:
         - name: {{ .Values.image.pullSecret }}
       {{- end }}
       volumes:
+      {{- if not .Values.kube.externalConfig }}
       - name: kubedir
         configMap:
           name: {{ template "flux.fullname" . }}-kube-config
+      {{- end }}
       {{- if .Values.ssh.known_hosts }}
       - name: sshdir
         configMap:
@@ -129,8 +133,10 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 5
           volumeMounts:
+          {{- if not .Values.kube.externalConfig }}
           - name: kubedir
             mountPath: /root/.kubectl
+          {{- end }}
           {{- if .Values.ssh.known_hosts }}
           - name: sshdir
             mountPath: /root/.ssh
@@ -180,21 +186,30 @@ spec:
           {{- if .Values.extraEnvs }}
 {{ toYaml .Values.extraEnvs | indent 10 }}
           {{- end }}
-          {{- if .Values.env.secretName }}
           envFrom:
+          {{- if .Values.extraEnvsFrom }}
+{{ toYaml .Values.extraEnvsFrom | indent 10 }}
+          {{- end }}
+          {{- if .Values.env.secretName }}
           - secretRef:
               name: {{ .Values.env.secretName }}
           {{- end }}
           args:
-          {{- if not .Values.clusterRole.create }}
+          {{- if and (not .Values.clusterRole.create) ( .Values.allowedNamespaces) }}
           - --k8s-allow-namespace={{ join "," (append .Values.allowedNamespaces .Release.Namespace) }}
           {{- end}}
+          {{- if .Values.defaultNamespace }}
+          - --k8s-default-namespace={{ .Values.defaultNamespace }}
+          {{- end }}
           {{- if .Values.logFormat }}
           - --log-format={{ .Values.logFormat }}
           {{end}}
           - --ssh-keygen-dir=/var/fluxd/keygen
           - --ssh-keygen-format={{ .Values.ssh.keygen.format }}
           - --k8s-secret-name={{ .Values.git.secretName | default (printf "%s-git-deploy" (include "flux.fullname" .)) }}
+          {{- if .Values.git.secretDataKey }}
+          - --k8s-secret-data-key={{ .Values.git.secretDataKey }}
+          {{- end }}
           - --memcached-hostname={{ .Values.memcached.hostnameOverride | default (printf "%s-memcached" (include "flux.fullname" .)) }}
           - --sync-state={{ .Values.sync.state }}
           {{- if .Values.sync.timeout }}
@@ -288,12 +303,12 @@ spec:
           {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+{{- if .Values.extraContainers }}
+{{ toYaml .Values.extraContainers | indent 8}}
+{{- end }}
 {{- if .Values.hostAliases }}
       hostAliases:
 {{ toYaml .Values.hostAliases |indent 8 }}
-{{- end }}
-{{- if .Values.extraContainers }}
-{{ toYaml .Values.extraContainers | indent 8}}
 {{- end }}
 {{- if .Values.dnsPolicy }}
       dnsPolicy: {{ .Values.dnsPolicy }}
@@ -303,7 +318,7 @@ spec:
 {{ toYaml .Values.dnsConfig | indent 8 }}
 {{- end }}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       {{- with .Values.nodeSelector }}
 {{ toYaml . | indent 8 }}
     {{- end }}

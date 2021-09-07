@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"os"
@@ -8,8 +9,9 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/typed/core/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/fluxcd/flux/pkg/ssh"
 )
@@ -119,7 +121,8 @@ func (skr *sshKeyRing) Regenerate() error {
 
 	patch := map[string]map[string]string{
 		"data": map[string]string{
-			"identity": base64.StdEncoding.EncodeToString(privateKey),
+			"identity":     base64.StdEncoding.EncodeToString(privateKey),
+			"identity.pub": base64.StdEncoding.EncodeToString([]byte(publicKey.Key)),
 		},
 	}
 
@@ -128,7 +131,7 @@ func (skr *sshKeyRing) Regenerate() error {
 		return err
 	}
 
-	_, err = skr.SecretAPI.Patch(skr.SecretName, types.StrategicMergePatchType, jsonPatch)
+	_, err = skr.SecretAPI.Patch(context.TODO(), skr.SecretName, types.StrategicMergePatchType, jsonPatch, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}

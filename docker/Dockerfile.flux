@@ -1,9 +1,10 @@
-FROM alpine:3.12
+FROM alpine:3.14
 
 WORKDIR /home/flux
 
 RUN apk add --no-cache openssh-client ca-certificates tini 'git>=2.24.2' 'gnutls>=3.6.7' 'glib>=2.62.5-r0' gnupg gawk socat
 RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing git-secret
+RUN set -o pipefail && apk add --no-cache libintl && apk add --no-cache --virtual build_deps gettext && cp /usr/bin/envsubst /usr/local/bin/envsubst && apk del build_deps
 
 # Add git hosts to known hosts file so we can use
 # StrickHostKeyChecking with git+ssh
@@ -36,7 +37,7 @@ ENTRYPOINT [ "/sbin/tini", "--", "fluxd" ]
 
 # Get the kubeyaml binary (files) and put them on the path
 COPY --from=squaremo/kubeyaml:0.7.0 /usr/lib/kubeyaml /usr/lib/kubeyaml/
-ENV PATH=/bin:/usr/bin:/usr/local/bin:/usr/lib/kubeyaml
+ENV PATH=/bin:/sbin:/usr/bin:/usr/local/bin:/usr/lib/kubeyaml
 
 # Create minimal nsswitch.conf file to prioritize the usage of /etc/hosts over DNS queries.
 # This resolves the conflict between:

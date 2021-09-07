@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -41,6 +42,9 @@ var allowedEnvVars = []string{
 	// when container is running in hardened Openshift environments and user id is not found in /etc/passwd
 	// for usage flux must be wrapped using https://cwrap.org/nss_wrapper.html library
 	"NSS_WRAPPER_PASSWD", "NSS_WRAPPER_GROUP", "LD_PRELOAD",
+	// variables used by the AWS CodeCommit helper to get temporary git credentials when using Kubernetes
+	// service account IAM role integration
+	"AWS_WEB_IDENTITY_TOKEN_FILE", "AWS_ROLE_ARN",
 }
 
 type gitCmdConfig struct {
@@ -141,7 +145,16 @@ func secretUnseal(ctx context.Context, workingDir string) error {
 }
 
 func commit(ctx context.Context, workingDir string, commitAction CommitAction) error {
-	args := []string{"commit", "--no-verify", "-a", "-m", commitAction.Message}
+	message, err := ioutil.TempFile("", "flux-commit-*.txt")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(message.Name())
+	if _, err := message.WriteString(commitAction.Message); err != nil {
+		return err
+	}
+
+	args := []string{"commit", "--no-verify", "-a", "--file", message.Name()}
 	var env []string
 	if commitAction.Author != "" {
 		args = append(args, "--author", commitAction.Author)
@@ -205,7 +218,17 @@ func addNote(ctx context.Context, workingDir, rev, notesRef string, note interfa
 	if err != nil {
 		return err
 	}
-	args := []string{"notes", "--ref", notesRef, "add", "-m", string(b), rev}
+
+	message, err := ioutil.TempFile("", "flux-note-*.json")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(message.Name())
+	if _, err := message.Write(b); err != nil {
+		return err
+	}
+
+	args := []string{"notes", "--ref", notesRef, "add", "--file", message.Name(), rev}
 	return execGitCmd(ctx, args, gitCmdConfig{dir: workingDir})
 }
 

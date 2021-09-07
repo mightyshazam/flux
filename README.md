@@ -1,6 +1,18 @@
 # Flux
 
-> **Announcement** [Flux has joined CNCF as a sandbox project](https://www.weave.works/blog/flux-joins-the-cncf-sandbox)
+> **On Flux v2** In an announcement in August 2019, the expectation
+> was set that the Flux project would integrate the GitOps Engine,
+> then being factored out of ArgoCD. Since the result would be
+> backward-incompatible, it would require a major version bump: Flux
+> v2.
+>
+> After experimentation and considerable thought, we (the maintainers)
+> have found a path to Flux v2 that we think better serves our vision
+> of GitOps: the [GitOps Toolkit](https://toolkit.fluxcd.io/). In
+> consequence, we do not now plan to integrate GitOps Engine into
+> Flux.
+>
+> :warning: This also means that **[Flux v1 is in maintenance mode](https://github.com/fluxcd/flux/issues/3320)**.
 
 We believe in GitOps:
 
@@ -35,7 +47,7 @@ new infrastructure.
 
 [![CircleCI](https://circleci.com/gh/fluxcd/flux.svg?style=svg)](https://circleci.com/gh/fluxcd/flux)
 [![GoDoc](https://godoc.org/github.com/fluxcd/flux?status.svg)](https://godoc.org/github.com/fluxcd/flux)
-[![Documentation](https://img.shields.io/badge/latest-documentation-informational)](https://docs.fluxcd.io/en/latest/)
+[![Documentation](https://img.shields.io/badge/latest-documentation-informational)](https://fluxcd.io/legacy/flux/)
 
 ## What Flux does
 
@@ -45,32 +57,9 @@ container images and config changes are propagated to the cluster.
 
 ### Who is using Flux in production
 
-|    |     |     |
-| -- | --- | --- |
-|[ABA English](https://www.abaenglish.com)|[Alea Play Solutions](http://www.alea.com)|[APPUiO](https://appuio.ch)|
-|[Apester](https://apester.com)|[ArangoDB Oasis](https://arangodb.com/managed-service)|[Avisi](https://avisi.nl)|
-|[B3i](https://b3i.tech/)|[Babylon Health](https://www.babylonhealth.com/)|[Bink](https://bink.com)
-|[bimspot](https://bimspot.io)|[BlaBlaCar](https://www.blablacar.com/)|[blackmirror media](https://blackmirror.media)|
-|[Canva](https://www.canva.com/)|[Chattigo](https://chattigo.com)|[Cloudlets](https://cloudlets.io)|
-|[Cloudogu GmbH](https://cloudogu.com)|[CLVR Cloud Ltd](https://clvr.cloud)|[College of William & Mary](https://www.wm.edu)|
-|[Control Plane](https://control-plane.io)|[Consorcio Chile](https://www.consorcio.cl)|[CrowdRiff](https://crowdriff.com)|
-|[Cybrary](https://cybrary.it)|[FireHydrant](https://firehydrant.io)|[Frame.io](https://frame.io)|
-|[gastromatic](https://www.gastromatic.de/)|[Gini](https://gini.net)|[Greenpass](https://www.greenpass.com.br/)|
-|[happn](https://www.happn.com)|[HMCTS](https://www.gov.uk/government/organisations/hm-courts-and-tribunals-service)|[IBM Cloudant](https://www.ibm.com/cloud/cloudant)|
-|[Improwised Technologies](https://www.improwised.com/)|[Infabode](https://infabode.com)|[iQmetrix](https://www.iqmetrix.com)|
-|[karriere tutor GmbH](https://www.karrieretutor.de)|[Limejump](https://limejump.com)|[loveholidays](https://www.loveholidays.com/)|
-|[LUNAR](https://www.lunarway.com/)|[MediaMarktSaturn](https://www.mediamarktsaturn.com)|[Mettle](https://mettle.co.uk)|
-|[Mintel](https://www.mintel.com)|[Multicaja S.A](https://www.multicaja.cl)|[Okteto Cloud](https://okteto.com/)|
-|[Omise](https://www.omise.co)|[Payout](https://payout.one)|[Plex Systems](https://www.plex.com/)|
-|[Qordoba](https://qordoba.com)|[Rakuten](https://rakuten.com)|[RentPath](https://rentpath.com)|
-|[Replicated](https://replicated.com)|[Resulta](https://resulta.com)|[Rungway](https://rungway.com)|
-|[Sage AI Labs](https://www.sage.com)|[Starbucks](https://www.starbucks.com/)|[SupplyStack](https://www.supplystack.com/)|
-|[Troii](https://troii.com/)|[UK Hydrographic Office](https://www.gov.uk/government/organisations/uk-hydrographic-office)|[Under Armour](https://www.underarmour.com)|
-|[VSHN](https://vshn.ch)|[Walmart Chile](https://www.walmartchile.cl)|[Weave Cloud](https://cloud.weave.works)|
-|[Workable](https://www.workable.com)|[Workarea](https://www.workarea.com)|[Working Group Two](https://wgtwo.com)|
-|[Yad2](https://yad2.co.il)|[Yusofleet](https://yusofleet.com)|[Zaaksysteem](https://zaaksysteem.nl)|
+**Our list of production users has moved to <https://fluxcd.io/adopters/#flux-v1>**.
 
-If you too are using Flux in production; please submit a PR to add your organization to the list!
+If you too are using Flux in production; please [submit a PR to add your organization](https://github.com/fluxcd/website/tree/main/adopters#readme) to the list!
 
 ### History
 
@@ -85,10 +74,10 @@ could easily integrate.
 
 With the following tutorials:
 
-- [Get started with Flux](https://docs.fluxcd.io/en/latest/tutorials/get-started)
-- [Get started with Flux using Helm](https://docs.fluxcd.io/en/latest/tutorials/get-started-helm)
+- [Get started with Flux](https://fluxcd.io/legacy/flux/tutorials/get-started/)
+- [Get started with Flux using Helm](https://fluxcd.io/legacy/flux/tutorials/get-started-helm/)
 
-or just [browse through the documentation](https://docs.fluxcd.io).
+or just [browse through the documentation](https://fluxcd.io/legacy/flux/).
 
 Do you want to release your Helm charts in a declarative way?
 Take a look at the [`fluxcd/helm-operator`](https://github.com/fluxcd/helm-operator).
@@ -102,7 +91,7 @@ a few popular ones you might want to check out:
 - [Managing Helm releases the GitOps way](https://github.com/fluxcd/helm-operator-get-started)
 - [OpenFaaS GitOps workflow with Flux](https://github.com/stefanprodan/openfaas-flux)
 - [GitOps for Istio Canary deployments](https://github.com/stefanprodan/gitops-istio)
-- [Fluxcloud to receive events from Flux](https://github.com/justinbarrick/fluxcloud)
+- [Fluxcloud to receive events from Flux](https://github.com/topfreegames/fluxcloud)
 
 ## Community & Developer information
 
@@ -120,14 +109,22 @@ To familiarise yourself with the project and how things work, you might
 be interested in the following:
 
 - [Our contributions guidelines](CONTRIBUTING.md)
-- [Build documentation](https://docs.fluxcd.io/en/latest/contributing/building)
+- [Build documentation](https://fluxcd.io/legacy/flux/contributing/building/)
 - [Release documentation](internal/docs/releasing.md)
 
 ## <a name="help"></a>Getting Help
 
-If you have any questions about Flux and continuous delivery:
+Reminder that Flux v1 is in maintenance mode. If you have any questions about Flux v2 and future migrations, these are the best ways to stay informed:
 
-- Read [the Flux docs](https://docs.fluxcd.io).
+- Read about the [GitOps Toolkit](https://toolkit.fluxcd.io/) (Flux v2 is built on the GitOps Toolkit).
+- Ask questions and add suggestions in our [GitOps Toolkit Discussions](https://github.com/fluxcd/toolkit/discussions)
+- Check out our **[events calendar](https://fluxcd.io/#calendar)**, both with upcoming talks, events and meetings you can attend.
+- Or view the **[resources section](https://fluxcd.io/resources)** with past events videos you can watch.
+- Join the Flux v2 / GitOps Toolkit [community meetings](https://fluxcd.io/community/#meetings)
+
+If you have further questions about Flux or continuous delivery:
+
+- Read [the Flux docs](https://fluxcd.io/legacy/flux/).
 - Invite yourself to the <a href="https://slack.cncf.io" target="_blank">CNCF community</a>
   slack and ask a question on the [#flux](https://cloud-native.slack.com/messages/flux/)
   channel.
@@ -136,4 +133,3 @@ If you have any questions about Flux and continuous delivery:
 - [File an issue.](https://github.com/fluxcd/flux/issues/new/choose)
 
 Your feedback is always welcome!
-

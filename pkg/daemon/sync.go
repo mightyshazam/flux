@@ -45,10 +45,14 @@ type changeSet struct {
 
 // Sync starts the synchronization of the cluster with git.
 func (d *Daemon) Sync(ctx context.Context, started time.Time, newRevision string, rat ratchet) error {
+	ctx, cancel := context.WithTimeout(ctx, d.SyncTimeout)
+	defer cancel()
+
 	// Load last-synced resources for comparison
 	lastResources, err := d.getLastResources(ctx, rat)
 	if err != nil {
-		return errors.Wrap(err, "loading last-synced resources")
+		d.Logger.Log("warning", "failed to load last-synced resources. sync event may be inaccurate", "err", err)
+		lastResources = map[string]resource.Resource{}
 	}
 
 	// Retrieve change set of commits we need to sync

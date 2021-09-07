@@ -8,12 +8,13 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/ryanuber/go-glob"
 	"io"
 	"os/exec"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/ryanuber/go-glob"
 
 	"github.com/go-kit/kit/log"
 	"github.com/imdario/mergo"
@@ -115,14 +116,15 @@ func (c *Cluster) Sync(syncSet cluster.SyncSet) error {
 		errs = append(errs, deleteErrs...)
 	}
 
+	// It is expected that Cluster.Sync is invoked with *all* resources.
+	// Otherwise it will override previously recorded sync errors.
+	c.setSyncErrors(errs)
+
 	// If `nil`, errs is a cluster.SyncError(nil) rather than error(nil), so it cannot be returned directly.
 	if errs == nil {
 		return nil
 	}
 
-	// It is expected that Cluster.Sync is invoked with *all* resources.
-	// Otherwise it will override previously recorded sync errors.
-	c.setSyncErrors(errs)
 	return errs
 }
 
@@ -336,7 +338,7 @@ func (c *Cluster) listAllowedResources(
 	if !namespaced {
 		// The resource is not namespaced, everything is allowed
 		resourceClient := c.client.dynamicClient.Resource(gvr)
-		data, err := resourceClient.List(options)
+		data, err := resourceClient.List(context.TODO(), options)
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +352,7 @@ func (c *Cluster) listAllowedResources(
 	}
 	var result []unstructured.Unstructured
 	for _, ns := range namespaces {
-		data, err := c.client.dynamicClient.Resource(gvr).Namespace(ns).List(options)
+		data, err := c.client.dynamicClient.Resource(gvr).Namespace(ns).List(context.TODO(), options)
 		if err != nil {
 			return result, err
 		}
@@ -600,7 +602,7 @@ func (c *Kubectl) doCommand(logger log.Logger, r io.Reader, args ...string) erro
 	begin := time.Now()
 	err := cmd.Run()
 	if err != nil {
-		err = errors.Wrap(errors.New(strings.TrimSpace(stderr.String())), "running kubectl")
+		err = fmt.Errorf("running kubectl: %w, stderr: %s", err, strings.TrimSpace(stderr.String()))
 	}
 
 	logger.Log("cmd", "kubectl "+strings.Join(args, " "), "took", time.Since(begin), "err", err, "output", strings.TrimSpace(stdout.String()))

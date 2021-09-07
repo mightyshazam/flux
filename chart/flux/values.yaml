@@ -9,16 +9,21 @@ logFormat: fmt
 
 image:
   repository: docker.io/fluxcd/flux
-  tag: 1.19.0
+  tag: 1.24.0
   pullPolicy: IfNotPresent
   pullSecret:
 
 service:
   type: ClusterIP
+  createClusterIP: true
   port: 3030
 
 # Specifies which namespaces flux should have access to
 allowedNamespaces: []
+
+# Specifies which namespace flux should use for resources where a namespace is not
+# specified. If none is provided here, the default namespace in kubeconfig is used.
+defaultNamespace: ""
 
 rbac:
   # Specifies whether RBAC resources should be created
@@ -125,12 +130,24 @@ git:
   timeout: "20s"
   # The secret name can be used to supply your own SSH key, instead of
   # relying on Flux to generate one for you:
-  # 1. Generate a SSH key named identity: ssh-keygen -q -N "" -f ./identity
-  # 2. Create a Kubernetes secret: kubectl -n flux create secret generic flux-ssh --from-file=./identity
-  # 3. Delete the private key: rm ./identity
+  # 1. Generate a SSH key named identity:
+  #      ssh-keygen -q -N "" -f ./identity
+  # 2. Create a Kubernetes secret:
+  #      kubectl -n flux create secret generic flux-ssh --from-file=./identity
+  #   2a. The SSH key will be stored in a data key matching the file name.
+  #       Set the `git.secretDataKey` value below to change the data key if
+  #       you want to use a different source file.
+  # 3. Don't check these key files into your Git repository! Once you've created
+  #    the Kubernetes secret, Delete the private key:
+  #      rm ./identity
   # 4. Add ./identity.pub as a deployment key with write access in your Git repo
   # 5. Set the secret name (flux-ssh) below
   secretName: ""
+  # The default secret data key for storing the Git repository deploy key
+  # is "identity" which must match the filename in the steps for supplying
+  # your own SSH deploy key (see secretName above).  Use this field if you
+  # want to use your own filename and override the key above.
+  secretDataKey: ""
   # Enables `git-secret` support, as this makes use of known GPG keys
   # you will need to have imported the paired secret-key with one of
   # the public-keys which were used in the encryption using
@@ -191,7 +208,7 @@ memcached:
   enabled: true
   hostnameOverride:
   repository: memcached
-  tag: 1.5.20
+  tag: 1.6.10-alpine
   pullSecret:
   createClusterIP: true
   verbose: false
@@ -211,8 +228,8 @@ memcached:
     #  cpu: 100m
     #  memory: 628Mi
     requests:
-     cpu: 50m
-     memory: 64Mi
+      cpu: 50m
+      memory: 64Mi
   priorityClassName: ""
 
 ssh:
@@ -229,8 +246,22 @@ ssh:
   secret:
     # Annotations for the Secret
     annotations: {}
+  config: ""
+    # specify the config which would go in /root/.ssh/config file
+    # for e.g.
+  # config: |
+  #   Host github.com
+  #   ProxyCommand socat STDIO PROXY:<proxyIP>:%h:%p,proxyport=<proxyPort>,proxyauth=<username:password>
+  #   User git
+  #   Hostname ssh.github.com
+  #   Port 443
+  #   IdentityFile /etc/fluxd/ssh/identity
+
 
 kube:
+  # Disable KUBECONFIG env var and passing the default config into the Container
+  # This means you need to provide both on your own, by using extraVars and ExtraVolume(Mounts)
+  externalConfig: false
   # Override for kubectl default config
   config: |
     apiVersion: v1
@@ -260,6 +291,12 @@ extraEnvs: []
 # extraEnvs:
 #   - name: FOO
 #     value: bar
+
+# Additional environment variables from a list of sources to set
+extraEnvsFrom: []
+# extraEnvsFrom:
+#   - configMapRef:
+#       name: special-config
 
 prometheus:
   enabled: false
@@ -301,3 +338,12 @@ hostAliases: {}
 #    hostnames:
 #    - "foo.remote"
 #    - "bar.remote"
+
+dashboards:
+  # If enabled, flux will create a configmap with a dashboard in json that's going to be picked up by grafana
+  # See https://github.com/helm/charts/tree/master/stable/grafana#configuration - `sidecar.dashboards.enabled`
+  enabled: false
+  # The namespace where the dashboard is deployed, defaults to the installation namespace
+  namespace:
+  # The prefix of the generated configmaps
+  nameprefix: dashboard
