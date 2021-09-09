@@ -23,6 +23,7 @@ const (
 
 type azureAcrAccessToken struct {
 	token string
+	refreshToken string
 	spt   *adal.ServicePrincipalToken
 }
 
@@ -38,7 +39,7 @@ type azureCloudConfig struct {
 func ImageCredsWithAzureAuth(lookup func() ImageCreds, logger log.Logger) (func() error, func() ImageCreds) {
 	azureCreds := NoCredentials()
 
-	registryExpire := map[string]time.Time{}
+	registryTokens := map[string]azureAcrAccessToken{}
 	// we can get an error when refreshing the credentials; to avoid
 	// spamming the log, keep track of failed refreshes.
 	regionEmbargo := map[string]time.Time{}
@@ -47,25 +48,50 @@ func ImageCredsWithAzureAuth(lookup func() ImageCreds, logger log.Logger) (func(
 	ensureCreds := func(domain string, now time.Time) error {
 		// if we had an error getting a token before, don't try again
 		// until the embargo has passed
-		if embargo, ok := regionEmbargo[domain]; ok {
-			if embargo.After(now) {
-				return nil // i.e., fail silently
+		{
+			if embargo, ok := regionEmbargo[domain]; ok {
+				if embargo.After(now) {
+					return nil // i.e., fail silently
+				}
+				delete(regionEmbargo, domain)
 			}
-			delete(regionEmbargo, domain)
-		}
 
-		// if we don't have the entry at all, we need to get a
-		// token. NB we can't check the inverse and return early,
-		// since if the creds do exist, we need to check their expiry.
-		if c := azureCreds.credsFor(domain, logger); c == (creds{}) {
-			goto refresh
-		}
+			// if we don't have the entry at all, we need to get a
+			// token. NB we can't check the inverse and return early,
+			// since if the creds do exist, we need to check their expiry.
+			if c := azureCreds.credsFor(domain, logger); c == (creds{}) {
+				goto refresh
+			}
 
-		// otherwise, check if the tokens have expired
-		if expiry, ok := registryExpire[domain]; !ok || expiry.Before(now) {
-			goto refresh
-		}
+			// otherwise, check if the tokens have expired
+			expiry, ok := registryTokens[domain];
+			if !ok || expiry.spt.Token().IsExpired() {
+				logger.Log("info", "need to refresh token", "domain", domain, "expires", expiry)
+				goto refresh
+			}
 
+			accessToken, err := getAcrTokenFromRefreshToken(
+				context.Background(),
+				containerregistry.New(domain),
+				logger,
+				domain,
+				expiry.refreshToken)
+
+			if err != nil {
+				logger.Log("error", "failed to retrieve access token with refresh token", "err", err)
+				return err
+			}
+
+			repoCreds := azureAcrAccessToken{
+				token:        accessToken,
+				refreshToken: expiry.refreshToken,
+				spt:          expiry.spt,
+			}
+
+			azureCreds.Merge(Credentials{m: map[string]creds{
+				domain: credsFromServicePrincipalCreds(domain, repoCreds),
+			}})
+		}
 		// the creds exist and are before the use-by; nothing to be done.
 		return nil
 
@@ -79,7 +105,8 @@ func ImageCredsWithAzureAuth(lookup func() ImageCreds, logger log.Logger) (func(
 			logger.Log("error", "fetching credentials for registry", "registry", domain, "err", err, "embargo", embargoDuration)
 			return err
 		}
-		registryExpire[domain] = repoCreds.spt.Token().Expires()
+
+		registryTokens[domain] = repoCreds
 		azureCreds.Merge(Credentials{m: map[string]creds{
 			domain: credsFromServicePrincipalCreds(domain, repoCreds),
 		}})
@@ -152,6 +179,7 @@ func getAzureCloudConfigAADToken(host string, logger log.Logger) (creds, error) 
 		return creds{}, err
 	}
 
+
 	return credsFromServicePrincipalCreds(host, token), nil
 	/*
 		return creds{
@@ -179,8 +207,14 @@ func getAcrToken(ctx context.Context, cfg azureCloudConfig, registry string, tok
 		return azureAcrAccessToken{}, err
 	}
 
+	access, err := getAcrTokenFromRefreshToken(ctx, cl, logger, registry, *refresh.RefreshToken);
+	if err != nil {
+		return azureAcrAccessToken{}, nil
+	}
+
 	return azureAcrAccessToken{
-		token: *refresh.RefreshToken,
+		token: access,
+		refreshToken: *refresh.RefreshToken,
 		spt:   token,
 	}, nil
 	/*
@@ -190,6 +224,21 @@ func getAcrToken(ctx context.Context, cfg azureCloudConfig, registry string, tok
 			registry:   registry,
 			provenance: "AzureMSI",
 		}, nil*/
+}
+
+func getAcrTokenFromRefreshToken(
+	ctx context.Context,
+	cl containerregistry.BaseClient,
+	logger log.Logger,
+	registry string,
+	refreshToken string) (string, error) {
+	access, err := cl.GetAcrAccessToken(ctx, registry, "registry:catalog:*", refreshToken)
+	if err != nil {
+		logger.Log("error", errors.Wrap(err, "failed to retrieve access token"))
+		return "", err
+	}
+
+	return *access.AccessToken, nil
 }
 
 func fetchServicePrincipalCreds(registry string, logger log.Logger) (azureAcrAccessToken, error) {
@@ -243,14 +292,3 @@ func getServicePrincipalToken(env azure.Environment, cfg azureCloudConfig, regis
 
 	return adal.NewServicePrincipalToken(*adCfg, cfg.AADClientId, cfg.AADClientSecret, env.ServiceManagementEndpoint)
 }
-
-/*func getCliCredentials(cfg azureCloudConfig, registry string, logger log.Logger) (creds, error) {
-	ctx := context.Background()
-	t, err := cli.GetTokenFromCLI("https://management.core.windows.net/")
-	if err != nil {
-		return creds{}, err
-	}
-
-	return getAcrToken(ctx, cfg, registry, t.AccessToken, logger)
-}
-*/
