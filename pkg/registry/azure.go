@@ -25,6 +25,7 @@ type azureAcrAccessToken struct {
 	token string
 	refreshToken string
 	spt   *adal.ServicePrincipalToken
+	tenantId string
 }
 
 type azureCloudConfig struct {
@@ -70,12 +71,11 @@ func ImageCredsWithAzureAuth(lookup func() ImageCreds, logger log.Logger) (func(
 				goto refresh
 			}
 
-			accessToken, err := getAcrTokenFromRefreshToken(
+			accessToken, err := getAcrTokenFromPrevious(
 				context.Background(),
-				containerregistry.New(domain),
-				logger,
 				domain,
-				expiry.refreshToken)
+				expiry,
+				logger)
 
 			if err != nil {
 				logger.Log("error", "failed to retrieve access token with refresh token", "err", err)
@@ -83,9 +83,10 @@ func ImageCredsWithAzureAuth(lookup func() ImageCreds, logger log.Logger) (func(
 			}
 
 			repoCreds := azureAcrAccessToken{
-				token:        accessToken,
-				refreshToken: expiry.refreshToken,
-				spt:          expiry.spt,
+				token:        accessToken.token,
+				refreshToken: accessToken.refreshToken,
+				spt:          accessToken.spt,
+				tenantId: accessToken.tenantId,
 			}
 
 			azureCreds.Merge(Credentials{m: map[string]creds{
@@ -207,23 +208,28 @@ func getAcrToken(ctx context.Context, cfg azureCloudConfig, registry string, tok
 		return azureAcrAccessToken{}, err
 	}
 
-	access, err := getAcrTokenFromRefreshToken(ctx, cl, logger, registry, *refresh.RefreshToken);
+	return azureAcrAccessToken{
+		token: *refresh.RefreshToken,
+		refreshToken: *refresh.RefreshToken,
+		spt:   token,
+		tenantId: cfg.TenantId,
+	}, nil
+}
+
+func getAcrTokenFromPrevious(ctx context.Context, registry string, prev azureAcrAccessToken, logger log.Logger) (azureAcrAccessToken, error) {
+	cl := containerregistry.New(fmt.Sprintf("https://%s", registry))
+	refresh, err := cl.GetAcrRefreshTokenFromExchange(ctx, "access_token", registry, prev.tenantId, "", prev.spt.Token().AccessToken)
 	if err != nil {
-		return azureAcrAccessToken{}, nil
+		logger.Log("error", errors.Wrap(err, "failed to retrieve refresh token"))
+		return azureAcrAccessToken{}, err
 	}
 
 	return azureAcrAccessToken{
-		token: access,
+		token: *refresh.RefreshToken,
 		refreshToken: *refresh.RefreshToken,
-		spt:   token,
+		spt:   prev.spt,
+		tenantId: prev.tenantId,
 	}, nil
-	/*
-		return creds{
-			username:   "00000000-0000-0000-0000-000000000000",
-			password:   *refresh.RefreshToken,
-			registry:   registry,
-			provenance: "AzureMSI",
-		}, nil*/
 }
 
 func getAcrTokenFromRefreshToken(
